@@ -1,13 +1,13 @@
 import path from 'node:path'
 import { PrismaClient } from '@prisma/client'
-import { PrismaLibSQL } from '@prisma/adapter-libsql'
+import { PrismaLibSql } from '@prisma/adapter-libsql'
 import { createClient } from '@libsql/client'
 
 const dbPath = path.join(process.cwd(), 'prisma', 'dev.db')
 
 function createPrismaClient() {
   const libsql = createClient({ url: `file:${dbPath}` })
-  const adapter = new PrismaLibSQL(libsql)
+  const adapter = new PrismaLibSql(libsql)
   return new PrismaClient({ adapter })
 }
 
