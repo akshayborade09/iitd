@@ -50,7 +50,12 @@ export default function Home() {
     setStep(4)
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    await fetch('/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, whatsapp, city, duration, travelStatus, accommodation }),
+    })
     setStep(5)
   }
 

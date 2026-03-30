@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 
 const CITIES = [
@@ -8,6 +8,23 @@ const CITIES = [
   'Kolkata', 'Pune', 'Ahmedabad', 'Jaipur', 'Lucknow',
   'Chandigarh', 'Indore', 'Bhopal', 'Nagpur', 'Kochi',
   'Gurgaon', 'Noida', 'Other',
+]
+
+const ALL_CITIES = [
+  'Agra', 'Ahmedabad', 'Ajmer', 'Aligarh', 'Allahabad', 'Amravati', 'Amritsar', 'Anand',
+  'Aurangabad', 'Bangalore', 'Bareilly', 'Belgaum', 'Bhilai', 'Bhopal', 'Bhubaneswar',
+  'Bikaner', 'Bilaspur', 'Chandigarh', 'Chennai', 'Coimbatore', 'Cuttack', 'Darbhanga',
+  'Dehradun', 'Delhi', 'Dhanbad', 'Durgapur', 'Erode', 'Faridabad', 'Gaya', 'Ghaziabad',
+  'Gorakhpur', 'Guntur', 'Gurgaon', 'Guwahati', 'Gwalior', 'Hubli', 'Hyderabad',
+  'Imphal', 'Indore', 'Jabalpur', 'Jaipur', 'Jalandhar', 'Jalgaon', 'Jammu', 'Jamshedpur',
+  'Jhansi', 'Jodhpur', 'Kanpur', 'Karnal', 'Kochi', 'Kolhapur', 'Kolkata', 'Kota',
+  'Kozhikode', 'Lucknow', 'Ludhiana', 'Madurai', 'Mangalore', 'Meerut', 'Mohali',
+  'Moradabad', 'Mumbai', 'Muzaffarpur', 'Mysore', 'Nagpur', 'Nanded', 'Nashik',
+  'Navi Mumbai', 'Noida', 'Panaji', 'Panipat', 'Patiala', 'Patna', 'Pondicherry',
+  'Pune', 'Raipur', 'Rajkot', 'Ranchi', 'Rohtak', 'Rourkela', 'Sagar', 'Saharanpur',
+  'Salem', 'Sangli', 'Shimla', 'Siliguri', 'Solapur', 'Sonipat', 'Srinagar', 'Surat',
+  'Thane', 'Thiruvananthapuram', 'Thrissur', 'Tiruchirappalli', 'Tirupati', 'Udaipur',
+  'Ujjain', 'Vadodara', 'Varanasi', 'Vellore', 'Vijayawada', 'Visakhapatnam', 'Warangal',
 ]
 
 interface VisitDetailsPanelProps {
@@ -19,11 +36,45 @@ interface VisitDetailsPanelProps {
 
 export default function VisitDetailsPanel({ name, onBack, onContinue, initialDelay = 0 }: VisitDetailsPanelProps) {
   const [city, setCity] = useState('')
+  const [customCity, setCustomCity] = useState('')
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
   const [duration, setDuration] = useState<string | null>(null)
   const [tried, setTried] = useState(false)
   const [isExiting, setIsExiting] = useState(false)
+  const customCityRef = useRef<HTMLInputElement>(null)
+  const suggestionsRef = useRef<HTMLDivElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const dropdownBtnRef = useRef<HTMLButtonElement>(null)
 
-  const canContinue = city !== '' && duration !== null
+  const resolvedCity = city === 'Other' ? customCity.trim() : city
+  const canContinue = resolvedCity !== '' && duration !== null
+
+  const suggestions = customCity.trim().length > 0
+    ? ALL_CITIES.filter(c => c.toLowerCase().startsWith(customCity.trim().toLowerCase()))
+    : []
+
+  useEffect(() => {
+    if (city === 'Other') {
+      setTimeout(() => customCityRef.current?.focus(), 50)
+    }
+  }, [city])
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const t = e.target as Node
+      if (suggestionsRef.current && !suggestionsRef.current.contains(t) &&
+          customCityRef.current && !customCityRef.current.contains(t)) {
+        setShowSuggestions(false)
+      }
+      if (dropdownRef.current && !dropdownRef.current.contains(t) &&
+          dropdownBtnRef.current && !dropdownBtnRef.current.contains(t)) {
+        setDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const initials = name
     .split(' ')
@@ -37,7 +88,7 @@ export default function VisitDetailsPanel({ name, onBack, onContinue, initialDel
   const handleContinue = () => {
     if (!canContinue) { setTried(true); return }
     setIsExiting(true)
-    setTimeout(() => onContinue({ city, duration: duration! }), 300)
+    setTimeout(() => onContinue({ city: resolvedCity, duration: duration! }), 300)
   }
 
   const handleBack = () => {
@@ -76,25 +127,80 @@ export default function VisitDetailsPanel({ name, onBack, onContinue, initialDel
         </div>
 
         {/* Travelling from */}
-        <div className={`${animClass} flex flex-col gap-2`} style={{ animationDelay: isExiting ? '80ms' : `${initialDelay + 120}ms` }}>
+        <div className={`${animClass} flex flex-col gap-2 relative z-20`} style={{ animationDelay: isExiting ? '80ms' : `${initialDelay + 120}ms` }}>
           <p className="text-[16px] font-bold text-white leading-[34px]">Travelling from</p>
-          <div className={`smooth-corners relative glass-input flex items-center justify-between h-[56px] rounded-[24px] max-lg:rounded-[16px] px-4 bg-[rgba(255,255,255,0.05)] border transition-all ${
-            city ? '!border-white' : tried && !city ? '!border-[#FF4B4B] !bg-[rgba(255,82,82,0.20)]' : 'border-[rgba(255,255,255,0.08)]'
-          }`}>
-            <select
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              className="w-full h-full bg-transparent text-white text-[16px] leading-[28px] opacity-90 outline-none appearance-none cursor-pointer"
+          <div className="relative">
+            <button
+              ref={dropdownBtnRef}
+              type="button"
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className={`smooth-corners relative glass-input flex items-center justify-between w-full h-[56px] rounded-[24px] max-lg:rounded-[16px] px-4 bg-[rgba(255,255,255,0.05)] border transition-all cursor-pointer ${
+                resolvedCity ? '!border-white' : tried && !resolvedCity ? '!border-[#FF4B4B] !bg-[rgba(255,82,82,0.20)]' : 'border-[rgba(255,255,255,0.08)]'
+              }`}
             >
-              <option value="" disabled className="bg-[#1a1a1a] text-white">Select your city</option>
-              {CITIES.map((c) => (
-                <option key={c} value={c} className="bg-[#1a1a1a] text-white">{c}</option>
-              ))}
-            </select>
-            <svg className="absolute right-4 pointer-events-none" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 9l6 6 6-6" />
-            </svg>
+              <span className={`text-[16px] leading-[28px] ${city ? 'text-white opacity-90' : 'text-white opacity-40'}`}>
+                {city || 'Select your city'}
+              </span>
+              <svg className={`transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+            {dropdownOpen && (
+              <div
+                ref={dropdownRef}
+                className="absolute left-0 right-0 top-full mt-1 z-[100] rounded-[16px] max-lg:rounded-[12px] overflow-hidden border border-[rgba(255,255,255,0.15)] bg-[rgba(30,30,30,0.95)] backdrop-blur-[20px] max-h-[240px] overflow-y-auto scrollbar-hide"
+                style={{ scrollbarWidth: 'none' }}
+              >
+                {CITIES.filter(c => c !== 'Other').map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => { setCity(c); setCustomCity(''); setDropdownOpen(false) }}
+                    className={`w-full text-left px-4 py-3 text-[16px] text-white hover:bg-[rgba(255,255,255,0.1)] cursor-pointer transition-colors ${city === c ? 'bg-[rgba(255,255,255,0.08)]' : ''}`}
+                  >
+                    {c}
+                  </button>
+                ))}
+                <button
+                  onClick={() => { setCity('Other'); setDropdownOpen(false) }}
+                  className={`w-full text-left px-4 py-3 text-[16px] text-white hover:bg-[rgba(255,255,255,0.1)] cursor-pointer transition-colors ${city === 'Other' ? 'bg-[rgba(255,255,255,0.08)]' : ''}`}
+                >
+                  Other
+                </button>
+              </div>
+            )}
           </div>
+          {city === 'Other' && (
+            <div className="relative">
+              <input
+                ref={customCityRef}
+                type="text"
+                value={customCity}
+                onChange={(e) => { setCustomCity(e.target.value); setShowSuggestions(true) }}
+                onFocus={() => setShowSuggestions(true)}
+                placeholder="Enter your city"
+                className={`smooth-corners glass-input w-full h-[56px] rounded-[24px] max-lg:rounded-[16px] px-4 bg-[rgba(255,255,255,0.05)] text-white text-[16px] leading-[28px] opacity-90 outline-none border transition-all placeholder:text-white/40 ${
+                  customCity.trim() ? '!border-white' : tried && !customCity.trim() ? '!border-[#FF4B4B] !bg-[rgba(255,82,82,0.20)]' : 'border-[rgba(255,255,255,0.08)]'
+                }`}
+              />
+              {showSuggestions && suggestions.length > 0 && (
+                <div
+                  ref={suggestionsRef}
+                  className="absolute left-0 right-0 top-full mt-1 z-[100] rounded-[16px] max-lg:rounded-[12px] border border-[rgba(255,255,255,0.15)] bg-[rgba(30,30,30,0.95)] backdrop-blur-[20px] max-h-[240px] overflow-y-auto scrollbar-hide"
+                  style={{ scrollbarWidth: 'none' }}
+                >
+                  {suggestions.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => { setCustomCity(s); setShowSuggestions(false) }}
+                      className="w-full text-left px-4 py-3 text-[16px] text-white hover:bg-[rgba(255,255,255,0.1)] cursor-pointer transition-colors"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Visit Duration */}
