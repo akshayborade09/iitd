@@ -15,7 +15,8 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json({ success: true, id: registration.id }, { status: 201 })
-  } catch {
-    return NextResponse.json({ error: 'Failed to save registration' }, { status: 500 })
+  } catch (err) {
+    console.error('[register] DB error:', err)
+    return NextResponse.json({ error: 'Failed to save registration', detail: String(err) }, { status: 500 })
   }
 }
