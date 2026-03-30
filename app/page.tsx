@@ -50,24 +50,10 @@ export default function Home() {
     setStep(4)
   }
 
-  const handleSubmit = async () => {
-    await fetch('/api/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, whatsapp, city, duration, travelStatus, accommodation }),
-    })
+  const handleSubmit = () => {
     setStep(5)
   }
 
-  const handleBackToHome = () => {
-    setName('')
-    setWhatsapp('')
-    setCity('')
-    setDuration('')
-    setTravelStatus('')
-    setAccommodation('')
-    setStep(1)
-  }
 
   const isFormHidden = step >= 2
 
@@ -178,7 +164,7 @@ export default function Home() {
 
       {/* Desktop right panel — persistent container from step 2+ */}
       <div
-        className={`absolute right-0 top-0 bottom-0 w-[calc(50%-180px)] z-30 max-lg:hidden backdrop-blur-[15px] bg-[rgba(0,0,0,0.2)] transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+        className={`absolute right-0 top-0 bottom-0 w-[30%] z-30 max-lg:hidden backdrop-blur-[15px] bg-[rgba(0,0,0,0.2)] transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
           step >= 2
             ? 'opacity-100 translate-x-0'
             : 'opacity-0 translate-x-[80px] pointer-events-none'
@@ -208,7 +194,6 @@ export default function Home() {
           <div key="step5" className="absolute inset-0">
             <ThankYouPanel
               data={{ city, duration, travelStatus, accommodation }}
-              onBackToHome={handleBackToHome}
             />
           </div>
         )}
@@ -336,7 +321,6 @@ export default function Home() {
           <div key="step5" className="absolute inset-0">
             <ThankYouPanel
               data={{ city, duration, travelStatus, accommodation }}
-              onBackToHome={handleBackToHome}
             />
           </div>
         )}

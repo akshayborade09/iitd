@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 
 interface ThankYouPanelProps {
   data: {
@@ -9,7 +10,6 @@ interface ThankYouPanelProps {
     travelStatus: string
     accommodation: string
   }
-  onBackToHome: () => void
 }
 
 const DURATION_LABELS: Record<string, string> = {
@@ -39,9 +39,10 @@ function Chip({ icon, label, delay }: { icon: string; label: string; delay: numb
   )
 }
 
-export default function ThankYouPanel({ data, onBackToHome }: ThankYouPanelProps) {
+export default function ThankYouPanel({ data }: ThankYouPanelProps) {
+  const router = useRouter()
   return (
-    <div className="flex flex-col gap-[48px] items-center justify-center h-full px-[100px] max-lg:px-6 py-[60px]">
+    <div className="flex flex-col gap-[48px] items-center justify-center h-full p-8">
       {/* Checkmark + text */}
       <div className="animate-fade-slide-down flex flex-col gap-4 items-center" style={{ animationDelay: '0ms' }}>
         <div
@@ -54,7 +55,7 @@ export default function ThankYouPanel({ data, onBackToHome }: ThankYouPanelProps
           <Image src="/icons/check.svg" alt="Success" width={44} height={44} />
         </div>
         <div className="flex flex-col gap-2 items-center">
-          <h2 className="text-[32px] max-lg:text-[24px] font-normal text-white text-center">You are registered</h2>
+          <h2 className="text-[24px] max-lg:text-[24px] font-normal text-white text-center">You are registered</h2>
           <p className="text-[16px] text-white/70 leading-[20px] text-center">Your campus visit registration has been recorded</p>
         </div>
       </div>
@@ -70,10 +71,10 @@ export default function ThankYouPanel({ data, onBackToHome }: ThankYouPanelProps
       {/* Back to home button */}
       <div className="animate-fade-slide-down w-full" style={{ animationDelay: '500ms' }}>
         <button
-          onClick={onBackToHome}
+          onClick={() => router.push('/dashboard')}
           className="smooth-corners h-[56px] w-full rounded-[24px] max-lg:rounded-[16px] border-[8px] max-lg:border-[6px] border-[rgba(199,203,109,0.1)] bg-[#e3ed26] text-[18px] max-lg:text-[16px] text-black leading-[34px] opacity-90 text-center cursor-pointer transition-all hover:brightness-110 active:scale-[0.98]"
         >
-          Back to home
+          Go to dashboard
         </button>
       </div>
     </div>
